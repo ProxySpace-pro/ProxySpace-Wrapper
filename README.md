@@ -13,7 +13,7 @@ const { ProxySpace } = require("proxyspace");
     "cache-control": "no-cache",
   });
   util
-    .GeoLocation("104.21.25.193")
+    .GeoLocation("84.212.11.23")
     .then((ctx) => {
       console.log(ctx.ip);
     })
