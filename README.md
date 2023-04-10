@@ -1,6 +1,7 @@
 # ProxySpace Wrapper Docs
 
 In this document you can find descriptioned explanation of all objects in the ProxySpace module.
+`npm i proxyspace@latest`
 
 ### Example
 
