@@ -181,7 +181,7 @@ If `ip` is not defined it will lookup your local IP.
 }
 ```
 
-#### `**Uptime**(): Promise<API_UPTIME>`
+#### `Uptime(): Promise<API_UPTIME>`
 
 Gets the ProxySpace API uptime.
 
