@@ -238,7 +238,7 @@ const { ProxySpace_Countries } = require("proxyspace/dist/@types");
 
 `output` controls the behave about what kind of object to return from the method. In this case either an `array` or `plaintext`.
 
-#### `CheckProxy(proxyList: Array<string>, protocol: "http" | "https" | "socks4" | "socks5", **callback**: (err: Error | null, res: any) => any): boolean`
+#### `CheckProxy(proxyList: Array<string>, protocol: "http" | "https" | "socks4" | "socks5", callback: (err: Error | null, res: any) => any): boolean`
 
 `proxyList` has to be an array of Proxies in `<ip>:<port>` format. You can use `Proxify` method to get proxylists from our API.
 
