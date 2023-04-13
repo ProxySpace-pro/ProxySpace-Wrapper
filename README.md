@@ -24,9 +24,9 @@ util.Proxify("http", "array").then((proxyList) => {
 
 This will scrape HTTP proxies and check them. Every time a check is completed it calls up the callback you have given. It works in an in-memory enqueue for rapid checking with non blocking IO.
 
-We can also define a functionality to the module, to use proxies while connecting to the ProxySpace API and so on. For that purpose we can define custom headers, proxy and timeout at class initialization level. You can later on, after the initialization any time manipulate it by `<class>.proxySpace` property.
+We can also define a functionality to the module, to use proxies while connecting to the ProxySpace API and so on. For that purpose we can define custom headers, proxy and timeout at class initialization level. You can later on, after the initialization any time manipulate it by `<class>.proxySpace` property. For example lets say we wanted to change/modify the proxy we can use the following property: `<class>.proxySpace.defaults.proxy `
 
-**_ Lets go deeper into that with an example_**
+**Lets go deeper into that with an example**
 
 ```js
 const { ProxySpaceV2 } = require("proxyspace");
@@ -55,6 +55,7 @@ const { ProxySpace_Countries } = require("proxyspace/dist/@types");
       process.stdout.write(sub_ips + "\n");
     });
   });
+  util.proxySpace.defaults.proxy = undefined; // do not use proxy anymore when sending requests to the ProxySpace end
 })();
 ```
 
