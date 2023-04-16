@@ -1,4 +1,5 @@
 import { Netmask } from "netmask";
+import { AxiosProxyConfig } from 'axios';
 export type GEO_API_RESPONSE = {
     asn_number: number;
     asn_organization: string;
@@ -21,15 +22,8 @@ export type API_UPTIME = {
     years: number;
     speed: string;
 };
-export type ProxyConfig = {
-    host: string;
-    port: number;
-    auth: {
-        username: string;
-        password: string;
-    };
-};
-export type ProxyProtocols = "https" | "http" | "socks";
+export type ProxyConfig = AxiosProxyConfig;
+export type ProxyProtocols = "https" | "http" | "socks4" | "socks5";
 export type Subnet = {
     net: Array<{
         ip: Netmask;

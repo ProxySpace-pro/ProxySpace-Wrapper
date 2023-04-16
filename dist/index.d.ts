@@ -16,6 +16,6 @@ declare class ProxySpaceV2 extends ProxySpace {
     }, proxy?: ProxyConfig, timeout?: number);
     IP_Rangify(country?: ProxySpace_Countries): Promise<Subnet>;
     Proxify(protocol: ProxyProtocols, output: "array" | "plaintext"): Promise<Buffer | Array<string>>;
-    CheckProxy(proxyList: Array<string>, protocol: "http" | "https" | "socks4" | "socks5", callback: (err: Error | null, res: any) => any): boolean;
+    CheckProxy(proxyList: Array<string>, protocol: "http" | "https" | "socks4" | "socks5", timeoutMS: number, callback: (err: Error | null, res: any) => any): boolean;
 }
 export { ProxySpace, ProxySpaceV2 };

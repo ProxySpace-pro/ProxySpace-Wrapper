@@ -8,35 +8,70 @@ const axios_1 = __importDefault(require("axios"));
 const index_1 = require("./@types/index");
 const netmask_1 = require("netmask");
 const fastq_1 = __importDefault(require("fastq"));
+const socks_1 = require("socks");
 const ip_and_port_format = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})$/;
-const pool = (0, fastq_1.default)((arg, cb) => {
-    let valids = "";
-    let ctx = arg.proxy;
-    ctx = ctx.trim();
-    ctx = ctx.replaceAll(/\s/g, '');
-    if (ctx.length > 3 && !ip_and_port_format.test(ctx)) {
-        return cb(new Error("Invalid proxy format only <ip>:<port> is supported"), null);
+const pool = (0, fastq_1.default)(async (arg, cb) => {
+    try {
+        let valids = "";
+        let ctx = arg.proxy;
+        ctx = ctx.trim();
+        ctx = ctx.replaceAll(/\s/g, '');
+        if (ctx.length > 3 && !ip_and_port_format.test(ctx)) {
+            return cb(new Error("Invalid proxy format only <ip>:<port> is supported"), null);
+        }
+        let ip = ctx.split(":")[0];
+        let port = ctx.split(":")[1];
+        if (arg.protocol === "http" || arg.protocol === "https") {
+            arg.proxySpace.get("https://geo.proxyspace.pro/ip", {
+                proxy: {
+                    host: ip,
+                    port: Number(port),
+                    protocol: arg.protocol
+                },
+                headers: {
+                    "content-type": "application/json"
+                },
+                timeout: arg.timeout
+            }).then((res) => {
+                let data = res.data;
+                if (data.ip === ip) {
+                    valids += `${arg.protocol}://${ip}:${port}\n`;
+                    return cb(null, valids);
+                }
+            }).catch((err) => {
+                return;
+            });
+        }
+        else {
+            let type = 4;
+            if (arg.protocol === "socks5")
+                type = 5;
+            let s = await socks_1.SocksClient.createConnection({
+                proxy: {
+                    host: ip,
+                    port: Number(port),
+                    type: type
+                },
+                command: "connect",
+                destination: {
+                    host: "google.com",
+                    port: 80
+                },
+                timeout: arg.timeout
+            });
+            s.socket.write(`GET / HTTP/1.1\r\nHost: google.com\r\n\r\n`);
+            s.socket.on("data", (chunk) => {
+                s.socket.end();
+                valids = `${ip}:${port}`;
+                return cb(null, valids);
+            });
+            s.socket.on("error", () => s.socket.end());
+            s.socket.on("timeout", () => s.socket.end());
+        }
     }
-    let ip = ctx.split(":")[0];
-    let port = ctx.split(":")[1];
-    arg.proxySpace.get("https://geo.proxyspace.pro/ip", {
-        proxy: {
-            host: ip,
-            port: Number(port),
-            protocol: arg.protocol
-        },
-        headers: {
-            "content-type": "application/json"
-        }
-    }).then((res) => {
-        let data = res.data;
-        if (data.ip === ip) {
-            valids += `${arg.protocol}://${ip}:${port}\n`;
-            return cb(null, valids);
-        }
-    }).catch((err) => {
+    catch (err) {
         return;
-    });
+    }
 }, 1000);
 class ProxySpace {
     proxySpace;
@@ -126,8 +161,10 @@ class ProxySpaceV2 extends ProxySpace {
                 let proxy = "http";
                 if (protocol === "https")
                     proxy = "https";
-                if (protocol === "socks")
-                    proxy = "socks";
+                if (protocol === "socks4")
+                    proxy = "socks4";
+                if (protocol === "socks5")
+                    proxy = "socks5";
                 this.proxySpace.get(`/${protocol}.txt`, { baseURL: "https://proxyspace.pro" }).then((res) => {
                     let body = res.data;
                     if (output === "plaintext")
@@ -147,9 +184,9 @@ class ProxySpaceV2 extends ProxySpace {
             }
         });
     }
-    CheckProxy(proxyList, protocol, callback) {
+    CheckProxy(proxyList, protocol, timeoutMS, callback) {
         for (var i = 0; i < proxyList.length; i++) {
-            pool.push({ proxy: proxyList[i], proxySpace: this.proxySpace, protocol }, callback);
+            pool.push({ proxy: proxyList[i], proxySpace: this.proxySpace, protocol, timeout: timeoutMS }, callback);
         }
         return true;
     }

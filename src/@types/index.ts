@@ -27,7 +27,7 @@ export type API_UPTIME = {
 
 export type ProxyConfig = AxiosProxyConfig
 
-export type ProxyProtocols = "https" | "http" | "socks"
+export type ProxyProtocols = "https" | "http" | "socks4" | "socks5"
 export type Subnet = {
     net: Array<{ip: Netmask, country: ProxySpace_Countries, live: "yes" | "no" | "not-checked"}>  
 }

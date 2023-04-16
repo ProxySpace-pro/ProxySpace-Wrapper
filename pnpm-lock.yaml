@@ -10,6 +10,9 @@ dependencies:
   netmask:
     specifier: ^2.0.2
     version: 2.0.2
+  socks:
+    specifier: ^2.7.1
+    version: 2.7.1
 
 devDependencies:
   '@types/netmask':
@@ -80,6 +83,10 @@ packages:
       mime-types: 2.1.35
     dev: false
 
+  /ip@2.0.0:
+    resolution: {integrity: sha512-WKa+XuLG1A1R0UWhl2+1XQSi+fZWMsYKffMZTTYsiZaUD8k2yDAj5atimTUD2TZkyCkNEeYE5NhFZmupOGtjYQ==}
+    dev: false
+
   /mime-db@1.52.0:
     resolution: {integrity: sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==}
     engines: {node: '>= 0.6'}
@@ -104,4 +111,17 @@ packages:
   /reusify@1.0.4:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
+    dev: false
+
+  /smart-buffer@4.2.0:
+    resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
+    engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
+    dev: false
+
+  /socks@2.7.1:
+    resolution: {integrity: sha512-7maUZy1N7uo6+WVEX6psASxtNlKaNVMlGQKkG/63nEDdLOWNbiUMoLK7X4uYoLhQstau72mLgfEWcXcwsaHbYQ==}
+    engines: {node: '>= 10.13.0', npm: '>= 3.0.0'}
+    dependencies:
+      ip: 2.0.0
+      smart-buffer: 4.2.0
     dev: false

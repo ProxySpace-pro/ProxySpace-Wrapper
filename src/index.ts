@@ -3,47 +3,83 @@ import { API_UPTIME, GEO_API_RESPONSE, ProxyConfig, ProxySpace_Countries, Subnet
 import { Netmask } from "netmask";
 import fastq from "fastq";
 import type { queue, done } from "fastq";
+import { SocksClient } from "socks";
+import { SocksProxyType } from "socks/typings/common/constants";
 
 const ip_and_port_format = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})$/
 
 type Task = {
     proxy: string,
     proxySpace: AxiosInstance,
-    protocol: "http" | "https" | "socks4" | "socks5"
+    protocol: "http" | "https" | "socks4" | "socks5",
+    timeout: number
 }
   
-const pool: queue<Task> = fastq((arg: Task, cb: done) =>{
-    let valids = ""
-    let ctx = arg.proxy
-    ctx = ctx.trim()
-    ctx = ctx.replaceAll(/\s/g, '');
+const pool: queue<Task> = fastq(async (arg: Task, cb: done) =>{
+    try {
+        let valids = ""
+        let ctx = arg.proxy
+        ctx = ctx.trim()
+        ctx = ctx.replaceAll(/\s/g, '');
 
-    if(ctx.length > 3 && !ip_and_port_format.test(ctx)){
-        return cb(new Error("Invalid proxy format only <ip>:<port> is supported"), null)
-    }
-
-    let ip = ctx.split(":")[0]
-    let port = ctx.split(":")[1]
-
-    
-    arg.proxySpace.get("https://geo.proxyspace.pro/ip", {
-        proxy: {
-            host: ip,
-            port: Number(port),
-            protocol: arg.protocol  
-        }, 
-        headers: {
-            "content-type": "application/json"
+        if(ctx.length > 3 && !ip_and_port_format.test(ctx)){
+            return cb(new Error("Invalid proxy format only <ip>:<port> is supported"), null)
         }
-    }).then((res) => {
-        let data = res.data
-        if(data.ip === ip){
-            valids += `${arg.protocol}://${ip}:${port}\n`
-            return cb(null,valids)
+
+        let ip = ctx.split(":")[0]
+        let port = ctx.split(":")[1]
+
+        if(arg.protocol === "http" || arg.protocol === "https"){
+            arg.proxySpace.get("https://geo.proxyspace.pro/ip", {
+                proxy: {
+                    host: ip,
+                    port: Number(port),
+                    protocol: arg.protocol  
+                }, 
+                headers: {
+                    "content-type": "application/json"
+                },
+                timeout: arg.timeout
+            }).then((res) => {
+                let data = res.data
+                if(data.ip === ip){
+                    valids += `${arg.protocol}://${ip}:${port}\n`
+                    return cb(null,valids)
+                }
+            }).catch((err) =>{
+                return
+            })
+        } else {
+            let type = 4
+            if(arg.protocol === "socks5") type = 5
+            let s = await SocksClient.createConnection({
+                proxy: {
+                    host: ip,
+                    port: Number(port),
+                    type: type as SocksProxyType
+                },
+                command: "connect",
+                destination: {
+                    host: "google.com",
+                    port: 80
+                },
+                timeout: arg.timeout
+            })
+
+            s.socket.write(`GET / HTTP/1.1\r\nHost: google.com\r\n\r\n`)
+            s.socket.on("data",(chunk) =>{
+                s.socket.end()
+                valids = `${ip}:${port}`
+                return cb(null,valids)
+            })
+            s.socket.on("error" , () => s.socket.end())
+            s.socket.on("timeout", () => s.socket.end())
         }
-    }).catch((err) =>{
+    } catch (err) {
         return
-    })
+    }
+    
+    
 }, 1000)
 
 
@@ -145,7 +181,8 @@ class ProxySpaceV2 extends ProxySpace{
                 let proxy: ProxyProtocols = "http"
 
                 if(protocol === "https") proxy = "https"
-                if(protocol === "socks") proxy = "socks"
+                if(protocol === "socks4") proxy = "socks4"
+                if(protocol === "socks5") proxy = "socks5"
 
                 this.proxySpace.get(`/${protocol}.txt`,  {baseURL: "https://proxyspace.pro"}).then((res) =>{
                     
@@ -172,9 +209,10 @@ class ProxySpaceV2 extends ProxySpace{
     public CheckProxy(
         proxyList: Array<string>, 
         protocol: "http" | "https" | "socks4" | "socks5", 
+        timeoutMS: number,
         callback: (err: Error | null, res: any) => any): boolean{
         for(var i = 0; i < proxyList.length; i++){
-            pool.push({proxy: proxyList[i], proxySpace: this.proxySpace, protocol}, callback)
+            pool.push({proxy: proxyList[i], proxySpace: this.proxySpace, protocol, timeout: timeoutMS}, callback)
         }
         return true
     }
